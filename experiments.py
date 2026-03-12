@@ -1,4 +1,6 @@
 """
+Random stuff to test + notes
+
 need: (fixed no. of qubits)
 gate type
 target qubit
@@ -32,7 +34,15 @@ for i in range(1,rng.integers(2,12)):
     gene = [rng.choice(gates), q1, q2, q3 ,rng.random()*np.pi ]
     ran_c.append(gene)
 
+ran_c2 = []
+for i in range(1,rng.integers(2,12)):
+    qubit_choice = [i for i in range(0,qubits)]
+    [q1, q2, q3] = rng.choice(qubit_choice, 3, replace=False)
+    gene = [rng.choice(gates), q1, q2, q3 ,rng.random()*np.pi ]
+    ran_c2.append(gene)
+
 print(ran_c)
+print(ran_c2)
 
 ran_c_q = QuantumCircuit(qubits)
 for g in ran_c:
@@ -41,3 +51,28 @@ for g in ran_c:
 print(ran_c_q.draw())
 
 
+#mutation
+#insert gate?
+#change gate
+#change target qubits
+#change parameter
+#change order of gates
+
+
+
+#crossover
+
+#single point crossover
+#on ran_c and ran_c2
+
+minl = min(len(ran_c2), len(ran_c))
+if minl <= 1:
+    exit() #or the other thing...
+
+crossover_point = rng.integers(1, minl)
+
+child1 = ran_c[:crossover_point] + ran_c2[crossover_point:]
+child2 = ran_c2[:crossover_point] + ran_c[crossover_point:]
+
+print(child1)
+print(child2)

@@ -76,3 +76,11 @@ child2 = ran_c2[:crossover_point] + ran_c[crossover_point:]
 
 print(child1)
 print(child2)
+
+
+#TO DO
+#clean code
+#write readme
+#research optimisation methods e.g. grid search, reinforcement learnings
+#assess how easy/complex each would be
+#

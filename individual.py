@@ -68,17 +68,25 @@ class Individual:
                         self.chromosome[i][j] = (self.chromosome[i][j] + rng.normal(0,0.3)) % (2 * np.pi)
     
 
-    def calc_fitness(self):
-        """Calculates fitness."""
+    def calc_fidelity(self,target2=None):
+        """Calculates fidelity."""
         self.gen_qiskit()
         U = Operator(self.qis).data
         initial_state = np.zeros(2**Individual.no_qu)
         initial_state[0] = 1.0
 
         output_state = np.matmul(U, initial_state)
-        target_state = target(n_qubits=Individual.no_qu)
+        if target2 is not None:
+            target_state = target2
+        else:
+            target_state = target(n_qubits=Individual.no_qu)
 
-        self.fitness = state_fidelity(output_state, target_state) - self.qis.size() * 0.01
+        return state_fidelity(output_state, target_state)
+
+    def calc_fitness(self,target2=None):
+        """calculates fitness"""
+        self.gen_qiskit()
+        self.fitness = self.calc_fidelity(target2=target2) - self.qis.size() * 0.01
 
 
 

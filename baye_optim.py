@@ -1,17 +1,17 @@
 """
-Performs Bayesian Optimisation on the evolution parameters.
+Performs Bayesian Optimisation on either target states and gate sets, or evolutionary hyperparameters.
 """
-import optuna
-from tqdm import tqdm
-from ga_runner import run_ga
-from parameters import no_qu, gate_set,pop_size, mutation_rate, selection_pressure, elitism
 
+############PARAMETERS
 from circuits import gate_methods, bell_state, ghz_state, w_state
-from individual import Individual
+
+CIRCUIT = True #False: GA hyperparameters, True: target states and gate set
+TARGET_EVALS = 1000
+N_TRIALS = 5
 
 TARGET_OPTIONS: dict[str, tuple[int, object]] = {
-    "bell_phi_plus_2q": (2, bell_state(n_qubits=2, bell_type="phi_plus")),
-    "ghz_2q":           (2, ghz_state(n_qubits=2)),
+    "bell_phi_plus_2q": (3, bell_state(n_qubits=3, bell_type="phi_plus")),
+    "ghz_2q":           (3, ghz_state(n_qubits=3)),
     "ghz_3q":           (3, ghz_state(n_qubits=3)),
     "w_3q":             (3, w_state(n_qubits=3)),
 }
@@ -23,21 +23,21 @@ GATE_SET_OPTIONS: dict[str, list[str]] = {
     "full":       list(gate_methods.keys()),
 }
 
-TARGET_EVALS = 1000
-N_TRIALS = 50
-
-CIRCUIT = False
+###########################
+import optuna
+from tqdm import tqdm
+from ga_runner import run_ga
+from parameters import no_qu, gate_set,pop_size, mutation_rate, selection_pressure, elitism
+from individual import Individual
 
 if CIRCUIT:
     def objective(trial):
-        """Optimise target state and gate set with fixed GA hyperparameters."""
-        target_name    = trial.suggest_categorical("target",   list(TARGET_OPTIONS.keys()))
-        gate_set_name  = trial.suggest_categorical("gate_set", list(GATE_SET_OPTIONS.keys()))
+        """Optimise target state and gate set with fixed GA hyperparameters found in parameters.py."""
+        target_name = trial.suggest_categorical("target",   list(TARGET_OPTIONS.keys()))
+        gate_set_name = trial.suggest_categorical("gate_set", list(GATE_SET_OPTIONS.keys()))
     
         chosen_no_qu, target_state = TARGET_OPTIONS[target_name]
-        chosen_gate_set             = GATE_SET_OPTIONS[gate_set_name]
-    
-        Individual.target = target_state #means nothing
+        chosen_gate_set = GATE_SET_OPTIONS[gate_set_name]
     
         config = {
             "pop_size":           pop_size,
@@ -54,6 +54,7 @@ if CIRCUIT:
             no_qu=chosen_no_qu,
             gate_set=chosen_gate_set,
             trial=trial,
+            target2 = target_state
         )
     
         return fitness
@@ -79,27 +80,16 @@ else:
 
         return fitness
 
-
-# Optuna study with pruning
+# Optuna study
 study = optuna.create_study(
-    direction="maximize",
-    pruner=optuna.pruners.MedianPruner(
-        n_startup_trials=5,
-        n_warmup_steps=50
-    )
+    direction="maximize", #maximise the fitness
 )
 
-with tqdm(total=N_TRIALS, desc="Bayesian optimisation") as pbar:
-
-    def callback(study, trial):
-        pbar.set_postfix(best=study.best_value)
+with tqdm(total=N_TRIALS) as pbar: 
+    def callback(study, trial): #needed to force update the progress bar
         pbar.update(1)
-
     study.optimize(objective, n_trials=N_TRIALS, callbacks=[callback])
 
-
-print("\nBest parameters:")
-print(study.best_params)
-
-print("\nBest fitness:")
-print(study.best_value)
+#print results
+print(f"\nBest parameters: {study.best_params}")
+print(f"\nBest fitness: {study.best_value}")

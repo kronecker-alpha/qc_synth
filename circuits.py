@@ -51,7 +51,6 @@ gate_methods = {
     'CSWAP': lambda qc, qb1, qb2, qb3, p: qc.cswap(qb1, qb2, qb3),
     'CCZ': lambda qc, qb1, qb2, qb3, p: qc.ccz(qb1, qb2, qb3),
     'RCCX': lambda qc, qb1, qb2, qb3, p: qc.rccx(qb1, qb2, qb3),
-    'RC3X': lambda qc, qb1, qb2, qb3, p: qc.rc3x(qb1, qb2, qb3),
 }
 
 def bell_state(n_qubits=2, bell_type='phi_plus'):

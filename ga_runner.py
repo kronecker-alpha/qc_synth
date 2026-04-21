@@ -5,8 +5,13 @@ import heapq
 from population import tournament, crossover
 from individual import Individual
 import optuna
+import json
+from parameters import target
+from time import perf_counter
+import numpy as np
 
-def run_ga(config, iterations, no_qu, gate_set, trial=None, display=None):
+def run_ga(config, iterations, no_qu, gate_set, trial=None, display=None,target2=None):
+    start = perf_counter()
 
     pop_size = config["pop_size"]
     mutation_rate = config["mutation_rate"]
@@ -18,12 +23,13 @@ def run_ga(config, iterations, no_qu, gate_set, trial=None, display=None):
     pop = [Individual() for _ in range(pop_size)]
 
     best_fitness = 0
+    metrics = {"generations": []}
 
     for gen in range(iterations):
 
         # evaluate fitness
         for sol in pop:
-            sol.calc_fitness()
+            sol.calc_fitness(target2=target2)
 
         best = max(pop, key=lambda ind: ind.fitness)
         best_fitness = max(best_fitness, best.fitness)
@@ -31,6 +37,13 @@ def run_ga(config, iterations, no_qu, gate_set, trial=None, display=None):
         fitnesses = [ind.fitness for ind in pop]
         avg_fitness = sum(fitnesses) / len(fitnesses)
         worst_fitness = min(fitnesses)
+
+        metrics["generations"].append({
+            "generation": gen,
+            "best_fitness": best.fitness,
+            "worst_fitness": worst_fitness,
+            "average_fitness": avg_fitness
+        })
 
         # report intermediate value for pruning
         if trial is not None:
@@ -68,5 +81,22 @@ def run_ga(config, iterations, no_qu, gate_set, trial=None, display=None):
             sol.mutate()
 
         pop = pop + top
+
+    end = perf_counter()
+
+    metrics["time"] = end - start
+    metrics["circuit"] = [
+        [str(x) if isinstance(x, np.str_) else
+        int(x) if isinstance(x, np.integer) else
+        float(x) if isinstance(x, np.floating) else x
+        for x in row]
+        for row in best.chromosome
+    ]
+    metrics["ffidelity"] = best.calc_fidelity()
+
+    print(best.chromosome)
+
+    with open(fr"results/{no_qu}_{gate_set}_{target}.json","w") as f: #{no_qu}_{gate_set}_{target}
+        json.dump(metrics, f)
 
     return best_fitness

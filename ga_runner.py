@@ -9,8 +9,12 @@ import json
 from parameters import target
 from time import perf_counter
 import numpy as np
+import math
+import copy
 
-def run_ga(config, iterations, no_qu, gate_set, trial=None, display=None,target2=None):
+default_rng = np.random.default_rng()
+
+def run_ga(config, iterations, no_qu, gate_set, trial=None, display=None,target2=None, rng = default_rng):
     start = perf_counter()
 
     pop_size = config["pop_size"]
@@ -20,7 +24,7 @@ def run_ga(config, iterations, no_qu, gate_set, trial=None, display=None,target2
 
     Individual.set_class_vars(no_qu, gate_set, mutation_rate)
 
-    pop = [Individual() for _ in range(pop_size)]
+    pop = [Individual(rng=rng) for _ in range(pop_size)]
 
     best_fitness = 0
     metrics = {"generations": []}
@@ -61,24 +65,31 @@ def run_ga(config, iterations, no_qu, gate_set, trial=None, display=None,target2
             display.update_display(gen + 1, best.qis, state.data, best.fitness, avg_fitness, worst_fitness)
 
         # elitism
-        elites = int(((pop_size * elitism) // 2) * 2)
+        elites = math.ceil(pop_size * elitism) #number of circuits that are carried forward
         top = heapq.nlargest(elites, pop, key=lambda ind: ind.fitness)
+        top = copy.deepcopy(top)
 
         # crossover
         children = []
-        for _ in range(0, pop_size - elites):
-            par1 = tournament(pop, selection_pressure)
-            par2 = tournament(pop, selection_pressure)
+        for _ in range(0, math.ceil(((pop_size - elites) / 2) * 0.6)):
+            par1 = tournament(pop, selection_pressure, rng=rng)
+            par2 = tournament(pop, selection_pressure, rng=rng)
 
-            ch1, ch2 = crossover(par1.chromosome, par2.chromosome)
+            ch1, ch2 = crossover(par1.chromosome, par2.chromosome, rng=rng)
             children.append(ch1)
             children.append(ch2)
 
-        pop = [Individual(child) for child in children]
+        for _ in range(0, math.ceil(((pop_size - elites) / 2) * 0.4)):
+            c1 = tournament(pop, selection_pressure, rng=rng)
+            c2 = tournament(pop, selection_pressure, rng=rng)
+            children.append(copy.deepcopy(c1.chromosome))
+            children.append(copy.deepcopy(c2.chromosome))
+
+        pop = [Individual(chrom=child, crossover=True) for child in children]
 
         # mutation
         for sol in pop:
-            sol.mutate()
+            sol.mutate(rng=rng)
 
         pop = pop + top
 

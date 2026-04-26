@@ -4,10 +4,11 @@ Functions for editing the entire population.
 
 from individual import Individual
 import numpy as np
-rng = np.random.default_rng()
+default_rng = np.random.default_rng()
+import copy
 
 
-def tournament(pop, selection_pressure):
+def tournament(pop, selection_pressure, rng=default_rng):
     bestfit = -1
     bestsol = None
     #compares s random solutions, returns solution with the best fitness
@@ -20,15 +21,21 @@ def tournament(pop, selection_pressure):
             bestsol = cand
     return bestsol
 
-def crossover(par1, par2): #two chromosomes as inputs
-        """Peforms single point crossover."""
-        min_len = min(len(par1), len(par2))
-        crossover_point = rng.integers(1, max(2, min_len))
+def crossover(par1, par2, rng=default_rng):
+    """Segment-based crossover for variable-length quantum circuits."""
 
-        c1 = par1[:crossover_point] + par2[crossover_point:]
-        c2 = par2[:crossover_point] + par1[crossover_point:]
+    if len(par1) < 2 or len(par2) < 2:
+        return copy.deepcopy(par1), copy.deepcopy(par2)
 
-        return c1, c2 #returns the chromosome
+    # independent cut points
+    cut1 = rng.integers(1, len(par1))
+    cut2 = rng.integers(1, len(par2))
+
+    # build offspring
+    child1 = par1[:cut1] + par2[cut2:]
+    child2 = par2[:cut2] + par1[cut1:]
+
+    return child1, child2
 
 
 

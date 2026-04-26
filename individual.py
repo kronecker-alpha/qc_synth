@@ -5,8 +5,8 @@ Code for individual solutions. Structure of the chromosome, mutation and fitness
 from qiskit import QuantumCircuit
 from qiskit.quantum_info import Operator, state_fidelity
 import numpy as np
-rng = np.random.default_rng()
-from circuits import bell_state, ghz_state
+default_rng = np.random.default_rng()
+from circuits import qft_unitary, grover_diffusion_unitary, ripple_carry_adder_unitary, diagonal_phase_unitary
 
 #PARAMETERS
 from parameters import target
@@ -22,12 +22,12 @@ class Individual:
         Individual.gates = gates
         Individual.mut_rate = mut_rate
 
-    def __init__(self, chrom = None, crossover = False):
+    def __init__(self, chrom = None, crossover = False, rng=default_rng):
         
         if crossover == False:
             """Creates a random solution"""
             self.chromosome = []
-            for _ in range(1,rng.integers(2,12)):
+            for _ in range(1,rng.integers(6,30)):
                 qubit_choice = [i for i in range(0,Individual.no_qu)]
                 try:
                     [q1, q2, q3] = rng.choice(qubit_choice, 3, replace=False)
@@ -46,11 +46,11 @@ class Individual:
         for gene in self.chromosome:
             gate_methods[gene[0]](self.qis,gene[1], gene[2], gene[3], gene[4])
 
-    def mutate(self):
+    def mutate(self, rng=default_rng):
         """Applies mutation to each gene in the chromosome."""
         for i in range(0,len(self.chromosome)):
             for j in range(0,len(self.chromosome[i])):
-                if rng.random() <= self.mut_rate: #mutation rate for each gene
+                if rng.random() <= self.mut_rate: #mutation rate for each component of gene
                     if j==0: #change gate type
                         self.chromosome[i][j] = rng.choice(Individual.gates) #set unneeded stuff to None
                     elif j==1 or j==2: #target qubit + first control
@@ -63,9 +63,26 @@ class Individual:
                         if self.no_qu == 2: #or unneeded for this gate
                             pass
                         else: #don't even have a second control bit atm
-                            self.chromosome[i][j] = rng.integers(0,Individual.no_qu)
+                            valid_gates = [k for k in range(0,Individual.no_qu) if (k != self.chromosome[i][1] and k != self.chromosome[i][2])]
+                            self.chromosome[i][j] = rng.choice(valid_gates)
                     else: #change parameter by a small amount
                         self.chromosome[i][j] = (self.chromosome[i][j] + rng.normal(0,0.3)) % (2 * np.pi)
+
+        # ---- 3. STRUCTURAL MUTATION ----
+        if rng.random() < self.mut_rate:
+            qubit_choice = [i for i in range(0,Individual.no_qu)]
+            [q1, q2, q3] = rng.choice(qubit_choice, 3, replace=False)
+            gene = [rng.choice(Individual.gates), q1, q2, q3 ,rng.random()*2*np.pi ]
+            idx = rng.integers(0, len(self.chromosome) + 1)
+            self.chromosome.insert(idx, gene)
+
+        if rng.random() < self.mut_rate and len(self.chromosome) > 1:
+            idx = rng.integers(0, len(self.chromosome))
+            self.chromosome.pop(idx)
+
+        if rng.random() < self.mut_rate and len(self.chromosome) > 2:
+            i, j = rng.integers(0, len(self.chromosome), size=2)
+            self.chromosome[i], self.chromosome[j] = self.chromosome[j], self.chromosome[i]
     
 
     def calc_fidelity(self,target2=None):
@@ -81,12 +98,43 @@ class Individual:
         else:
             target_state = target(n_qubits=Individual.no_qu)
 
+        if np.allclose(target_state, qft_unitary(n_qubits=Individual.no_qu), atol=1e-8) or np.allclose(target_state, grover_diffusion_unitary(n_qubits=Individual.no_qu), atol=1e-8) or np.allclose(target_state, diagonal_phase_unitary(n_qubits=Individual.no_qu), atol=1e-8):
+            return self.calc_basis_fidelity(target2=target2)
+        if Individual.no_qu == 3:
+                if np.allclose(target_state, ripple_carry_adder_unitary(n_qubits=3), atol=1e-8):
+                    return self.calc_basis_fidelity(target2=target2)
+
         return state_fidelity(output_state, target_state)
+    
+    def calc_basis_fidelity(self, target2=None):
+        print("HERE")
+        self.gen_qiskit()
+        U_c = Operator(self.qis).data
+
+        dim = U_c.shape[0]
+        total = 0
+
+        if target2 is not None:
+            target_unitary = target2
+        else:
+            target_unitary = target(n_qubits=Individual.no_qu)
+
+        for x in range(dim):
+            basis = np.zeros(dim)
+            basis[x] = 1.0
+
+            out_c = U_c @ basis
+            out_t = target_unitary @ basis
+
+            total += state_fidelity(out_c, out_t)
+
+        return total / dim
+
 
     def calc_fitness(self,target2=None):
         """calculates fitness"""
         self.gen_qiskit()
-        self.fitness = self.calc_fidelity(target2=target2) - self.qis.size() * 0.01
+        self.fitness = self.calc_fidelity(target2=target2) - self.qis.size() * 0.001
 
 
 

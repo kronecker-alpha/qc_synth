@@ -1,1 +1,0 @@
-{"generations": [{"generation": 0, "best_fitness": 0.4899999999999999, "worst_fitness": -0.1, "average_fitness": 0.11826291260736223}, {"generation": 1, "best_fitness": 0.4899999999999999, "worst_fitness": -0.1, "average_fitness": 0.14267567205660162}], "time": 0.37849925000045914, "circuit": [["CX", 0, 1, 2, 5.085799173386158]], "ffidelity": 0.4999999999999999}

@@ -1,13 +1,14 @@
 """
-Contains the circuits to synthesise and gate to use.
+Contains the circuits that are synthesised and defines the gate dictionary from string to qiskit gate.
 """
-
 import numpy as np
 from qiskit.circuit.library import QFT
 from qiskit.quantum_info import Operator
+from qiskit import QuantumCircuit
+from qiskit.quantum_info import Statevector
 
 gate_methods = {
-    # Single-qubit gates
+    #Single-qubit gates
     'H': lambda qc, qb1, qb2, qb3, p: qc.h(qb1),
     'X': lambda qc, qb1, qb2, qb3, p: qc.x(qb1),
     'Y': lambda qc, qb1, qb2, qb3, p: qc.y(qb1),
@@ -16,22 +17,22 @@ gate_methods = {
     'T': lambda qc, qb1, qb2, qb3, p: qc.t(qb1),
     'SX': lambda qc, qb1, qb2, qb3, p: qc.sx(qb1),
 
-    # Parametric single-qubit gates
+    #Parametric gates
     'RX': lambda qc, qb1, qb2, qb3, p: qc.rx(p, qb1),
     'RY': lambda qc, qb1, qb2, qb3, p: qc.ry(p, qb1),
     'RZ': lambda qc, qb1, qb2, qb3, p: qc.rz(p, qb1),
 
-    # Two-qubit gates (renamed)
+    #Two-qubit gates 
     'CNOT': lambda qc, qb1, qb2, qb3, p: qc.cx(qb1, qb2),
     'SWAP': lambda qc, qb1, qb2, qb3, p: qc.swap(qb1, qb2),
 
-    # Three-qubit gates (renamed)
+    #Three-qubit gates
     'CCNOT': lambda qc, qb1, qb2, qb3, p: qc.ccx(qb1, qb2, qb3),
 }
 
 def bell_state(n_qubits=2, bell_type='phi_plus'):
     """
-    Returns the target Bell state as a statevector.
+    Returns Bell state as a statevector.
     """
     dim = 2**n_qubits
     state = np.zeros(dim, dtype=complex)
@@ -44,8 +45,7 @@ def bell_state(n_qubits=2, bell_type='phi_plus'):
 
 def ghz_state(n_qubits=2):
     """
-    Returns the GHZ (Greenberger-Horne-Zeilinger) state for n qubits.
-    |GHZ⟩ = (|00...0⟩ + |11...1⟩) / √2
+    Returns the GHZ state as a statevector.
     """
     dim = 2**n_qubits
     state = np.zeros(dim, dtype=complex)
@@ -55,8 +55,7 @@ def ghz_state(n_qubits=2):
 
 def w_state(n_qubits=3):
     """
-    Returns the n-qubit W state.
-    W state: (|100...0⟩ + |010...0⟩ + ... + |00...01⟩) / √n
+    Returns the W state as a statevector.
     """
     dim = 2**n_qubits
     state = np.zeros(dim, dtype=complex)
@@ -71,17 +70,13 @@ def w_state(n_qubits=3):
 
 
 def qft_unitary(n_qubits=3):
+    "Returns the GFT unitary."
     return Operator(QFT(num_qubits=n_qubits)).data
 
 def cluster_state_1d(n_qubits=3):
     """
-    Returns a 1D cluster state on n qubits.
-    Constructed by applying CZ gates between neighbours on |+>^n.
+    Returns a 1D cluster state as a statevector.
     """
-    import numpy as np
-    from qiskit import QuantumCircuit
-    from qiskit.quantum_info import Statevector
-
     qc = QuantumCircuit(n_qubits)
     
     # Prepare |+>^n
@@ -114,9 +109,7 @@ def haar_random_state(n_qubits=3, seed=None):
 
 def grover_diffusion_unitary(n_qubits=3):
     """
-    Returns the Grover diffusion operator:
-    D = 2|s><s| - I
-    where |s> is the uniform superposition state.
+    Returns the Grover diffusion operator.
     """
     import numpy as np
 
@@ -127,10 +120,8 @@ def grover_diffusion_unitary(n_qubits=3):
 
 def ripple_carry_adder_unitary(n_qubits=3):
     """
-    Returns a 3-qubit ripple-carry style adder (toy example).
-    Adds qubit 0 and 1 into qubit 2 (mod 2 with carry-like structure).
+    Returns a ripple-carry style adder.
     """
-
     if n_qubits != 3:
         raise ValueError("n_qubits must be == 3")
     
@@ -139,7 +130,6 @@ def ripple_carry_adder_unitary(n_qubits=3):
 
     qc = QuantumCircuit(3)
     
-    # Simple reversible logic (not full adder, but structured non-Clifford)
     qc.cx(0, 2)
     qc.cx(1, 2)
     qc.ccx(0, 1, 2)
@@ -148,8 +138,7 @@ def ripple_carry_adder_unitary(n_qubits=3):
 
 def diagonal_phase_unitary(n_qubits=3, theta=np.pi/4):
     """
-    Returns a diagonal unitary with phases depending on basis index.
-    U = diag(exp(i * theta * k)) for k in [0, ..., 2^n - 1]
+    Returns a diagonal unitary.
     """
     import numpy as np
 
@@ -157,3 +146,35 @@ def diagonal_phase_unitary(n_qubits=3, theta=np.pi/4):
     phases = np.exp(1j * theta * np.arange(dim))
     
     return np.diag(phases)
+
+
+TARGET_OPTIONS: dict[str, tuple[int, object]] = {
+    "bell_phi_plus_3q": (3, bell_state(n_qubits=3, bell_type="phi_plus")),
+    "ghz_3q":           (3, ghz_state(n_qubits=3)),
+    "w_3q":             (3, w_state(n_qubits=3)),
+
+    "cluster_3q":       (3, cluster_state_1d(n_qubits=3)),
+    "haar_4q":          (4, haar_random_state(n_qubits=4, seed=1)),
+
+    "qft_3q":           (3, qft_unitary(n_qubits=3)),
+    "grover_3q":        (3, grover_diffusion_unitary(n_qubits=3)),
+    "adder_3q":         (3, ripple_carry_adder_unitary(n_qubits=3)),
+    "diag_phase_3q":    (3, diagonal_phase_unitary(n_qubits=3)),
+}
+
+GATE_SET_OPTIONS: dict[str, list[str]] = {
+    "minimal_set_1": ["H", "CCNOT"],
+    "minimal_set_2": ["H", "T", "CNOT"],
+
+    "additional_set_1": ["H", "S", "T", "CNOT"],
+    "additional_set_2": ["H", "S", "T", "CNOT", "SWAP"],
+    "additional_set_3": ["X", "Y", "Z", "H", "S", "T", "CNOT"],
+
+    "minimal_parametric_set_1": ["RX", "RY", "CNOT"],
+    "minimal_parametric_set_2": ["RZ", "SX", "CNOT"],  
+
+    "additional_parametric_set": ["RX", "RY", "RZ", "CNOT"],
+
+    "all_gates": ["H", "CCNOT", "T", "CNOT", "S", "SWAP",
+        "X", "Y", "Z", "RX", "RY", "RZ", "SX"],
+}

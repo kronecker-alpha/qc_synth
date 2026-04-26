@@ -1,4 +1,4 @@
-#read metrics from json file and calculate other metrics
+"""read metrics from json file and calculate other metrics."""
 import json
 import os
 from qiskit import QuantumCircuit

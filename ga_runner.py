@@ -31,10 +31,11 @@ def run_ga(config, iterations, no_qu, gate_set, trial=None, display=None,target2
 
     for gen in range(iterations):
 
-        # evaluate fitness
+        #evaluate fitness
         for sol in pop:
             sol.calc_fitness(target2=target2)
 
+        #get metrics
         best = max(pop, key=lambda ind: ind.fitness)
         best_fitness = max(best_fitness, best.fitness)
 
@@ -42,21 +43,14 @@ def run_ga(config, iterations, no_qu, gate_set, trial=None, display=None,target2
         avg_fitness = sum(fitnesses) / len(fitnesses)
         worst_fitness = min(fitnesses)
 
-        metrics["generations"].append({
+        metrics["generations"].append({ #save metrics
             "generation": gen,
             "best_fitness": best.fitness,
             "worst_fitness": worst_fitness,
             "average_fitness": avg_fitness
         })
 
-        # report intermediate value for pruning
-        if trial is not None:
-            trial.report(best_fitness, gen)
-
-            if trial.should_prune():
-                raise optuna.exceptions.TrialPruned()
-
-        # GUI display (optional)
+        #GUI display (optional)
         if display:
             from qiskit.quantum_info import Statevector
 
@@ -64,12 +58,12 @@ def run_ga(config, iterations, no_qu, gate_set, trial=None, display=None,target2
             state = Statevector.from_instruction(best.qis)
             display.update_display(gen + 1, best.qis, state.data, best.fitness, avg_fitness, worst_fitness)
 
-        # elitism
+        #elitism
         elites = math.ceil(pop_size * elitism) #number of circuits that are carried forward
         top = heapq.nlargest(elites, pop, key=lambda ind: ind.fitness)
-        top = copy.deepcopy(top)
+        top = copy.deepcopy(top) #copy to prevent being overwritten
 
-        # crossover
+        #crossover
         children = []
         for _ in range(0, math.ceil(((pop_size - elites) / 2) * 0.6)):
             par1 = tournament(pop, selection_pressure, rng=rng)
@@ -79,6 +73,7 @@ def run_ga(config, iterations, no_qu, gate_set, trial=None, display=None,target2
             children.append(ch1)
             children.append(ch2)
 
+        #carry forward some of pop without crossover
         for _ in range(0, math.ceil(((pop_size - elites) / 2) * 0.4)):
             c1 = tournament(pop, selection_pressure, rng=rng)
             c2 = tournament(pop, selection_pressure, rng=rng)
@@ -87,16 +82,17 @@ def run_ga(config, iterations, no_qu, gate_set, trial=None, display=None,target2
 
         pop = [Individual(chrom=child, crossover=True) for child in children]
 
-        # mutation
+        #mutation
         for sol in pop:
             sol.mutate(rng=rng)
 
-        pop = pop + top
+        pop = pop + top #add back elitism
 
     end = perf_counter()
 
+    #metric calculations
     metrics["time"] = end - start
-    metrics["circuit"] = [
+    metrics["circuit"] = [ #needs converting from np for json
         [str(x) if isinstance(x, np.str_) else
         int(x) if isinstance(x, np.integer) else
         float(x) if isinstance(x, np.floating) else x
@@ -107,7 +103,7 @@ def run_ga(config, iterations, no_qu, gate_set, trial=None, display=None,target2
 
     print(best.chromosome)
 
-    with open(fr"results/{no_qu}_{gate_set}_{target}.json","w") as f: #{no_qu}_{gate_set}_{target}
+    with open(fr"results/{no_qu}_{gate_set}_{target}.json","w") as f:
         json.dump(metrics, f)
 
-    return best_fitness
+    return best_fitness #for optimisation

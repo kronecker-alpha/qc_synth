@@ -1,44 +1,29 @@
 """
-Main code with GUI. Run directly from here.
+Run an instance with the GUI, using parameters, gate set and target from parameters.py
 """
-
 from PySide6.QtWidgets import QApplication
-
-from parameters import (
-    pop_size,
-    mutation_rate,
-    selection_pressure,
-    elitism,
-    no_qu,
-    gate_set
-)
-
+from gui import GADisplay
+from parameters import pop_size, mutation_rate, selection_pressure, elitism, no_qu,gate_set
 from ga_runner import run_ga
 
-# total evaluation budget
+#total evaluation budget
 TARGET_EVALS = 100000
 
-
 def main():
-
-    # configuration dictionary
-    config = {
+    config = { #config dictionary
         "pop_size": pop_size,
         "mutation_rate": mutation_rate,
         "selection_pressure": selection_pressure,
         "elitism": elitism
     }
 
-    # maintain constant evaluation budget
+    #maintain constant computational budget
     iterations = int(TARGET_EVALS / config["pop_size"])
 
-    # initialise GUI
-    app = QApplication([])
-
-    from gui import GADisplay
+    app = QApplication([]) #initialises GUI
     display = GADisplay(app)
 
-    # run genetic algorithm
+    #run genetic algorithm
     run_ga(
         config=config,
         iterations=iterations,
@@ -47,7 +32,7 @@ def main():
         display=display
     )
 
-    # keep window open
+    #keeps window open
     app.exec()
 
 

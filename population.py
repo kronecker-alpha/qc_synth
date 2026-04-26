@@ -2,7 +2,6 @@
 Functions for editing the entire population.
 """
 
-from individual import Individual
 import numpy as np
 default_rng = np.random.default_rng()
 import copy
@@ -27,11 +26,11 @@ def crossover(par1, par2, rng=default_rng):
     if len(par1) < 2 or len(par2) < 2:
         return copy.deepcopy(par1), copy.deepcopy(par2)
 
-    # independent cut points
+    #select two independent cut points
     cut1 = rng.integers(1, len(par1))
     cut2 = rng.integers(1, len(par2))
 
-    # build offspring
+    #swap at the cut points
     child1 = par1[:cut1] + par2[cut2:]
     child2 = par2[:cut2] + par1[cut1:]
 

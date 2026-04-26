@@ -1,7 +1,9 @@
 """
 Unit tests for qc_synth.
-Run with: python -m pytest unit_tests.py -v
+Run with: 
+python -m pytest unit_tests.py -v
 """
+#lots fail as i've removed some unneeded gates from circuits.py
 
 import numpy as np
 import pytest

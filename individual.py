@@ -7,8 +7,6 @@ from qiskit.quantum_info import Operator, state_fidelity
 import numpy as np
 default_rng = np.random.default_rng()
 from circuits import qft_unitary, grover_diffusion_unitary, ripple_carry_adder_unitary, diagonal_phase_unitary
-
-#PARAMETERS
 from parameters import target
 from circuits import gate_methods
 
@@ -32,7 +30,7 @@ class Individual:
                 try:
                     [q1, q2, q3] = rng.choice(qubit_choice, 3, replace=False)
                     gene = [rng.choice(Individual.gates), q1, q2, q3 ,rng.random()*2*np.pi ]
-                except: #do nawt keep this, horrible solution #fine, just base it on gate
+                except: 
                     [q1, q2] = rng.choice(qubit_choice, 2, replace=False)
                     gene = [rng.choice(Individual.gates), q1, q2, None ,rng.random()*2*np.pi ]
                 self.chromosome.append(gene)
@@ -62,25 +60,25 @@ class Individual:
                     elif j==3: #second control
                         if self.no_qu == 2: #or unneeded for this gate
                             pass
-                        else: #don't even have a second control bit atm
+                        else: 
                             valid_gates = [k for k in range(0,Individual.no_qu) if (k != self.chromosome[i][1] and k != self.chromosome[i][2])]
                             self.chromosome[i][j] = rng.choice(valid_gates)
                     else: #change parameter by a small amount
                         self.chromosome[i][j] = (self.chromosome[i][j] + rng.normal(0,0.3)) % (2 * np.pi)
 
-        # ---- 3. STRUCTURAL MUTATION ----
-        if rng.random() < self.mut_rate:
+        #Structural Mutation
+        if rng.random() < self.mut_rate: #add gate
             qubit_choice = [i for i in range(0,Individual.no_qu)]
             [q1, q2, q3] = rng.choice(qubit_choice, 3, replace=False)
             gene = [rng.choice(Individual.gates), q1, q2, q3 ,rng.random()*2*np.pi ]
             idx = rng.integers(0, len(self.chromosome) + 1)
             self.chromosome.insert(idx, gene)
 
-        if rng.random() < self.mut_rate and len(self.chromosome) > 1:
+        if rng.random() < self.mut_rate and len(self.chromosome) > 1: #delete gate
             idx = rng.integers(0, len(self.chromosome))
             self.chromosome.pop(idx)
 
-        if rng.random() < self.mut_rate and len(self.chromosome) > 2:
+        if rng.random() < self.mut_rate and len(self.chromosome) > 2: #swap two gates
             i, j = rng.integers(0, len(self.chromosome), size=2)
             self.chromosome[i], self.chromosome[j] = self.chromosome[j], self.chromosome[i]
     
@@ -107,7 +105,7 @@ class Individual:
         return state_fidelity(output_state, target_state)
     
     def calc_basis_fidelity(self, target2=None):
-        print("HERE")
+        """Calculate fitness for unitary operator."""
         self.gen_qiskit()
         U_c = Operator(self.qis).data
 

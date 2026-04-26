@@ -1,31 +1,28 @@
 """
-Performs Bayesian Optimisation on either target states and gate sets, or evolutionary hyperparameters.
+Performs Bayesian Optimisation on the hyperparameters of the genetic program using Optuna.
 """
-
 ############PARAMETERS
 
 TARGET_EVALS = 10000
 N_TRIALS = 5
 
-
-###########################
+############
 import optuna
 from tqdm import tqdm
 from ga_runner import run_ga
-from parameters import no_qu, gate_set,pop_size, mutation_rate, selection_pressure, elitism
-from individual import Individual
+from parameters import no_qu, gate_set
 
   
 def objective(trial):
 
-    config = {
+    config = { #hyperparameter value ranges
         "pop_size": trial.suggest_int("pop_size", 50, 500),
         "mutation_rate": trial.suggest_float("mutation_rate", 0.001, 0.05),
         "selection_pressure": trial.suggest_int("selection_pressure", 2, 20),
         "elitism": trial.suggest_float("elitism", 0.02, 0.2),
     }
 
-    iterations = int(TARGET_EVALS / config["pop_size"])
+    iterations = int(TARGET_EVALS / config["pop_size"]) #ensure consistant computational useage
 
     fitness = run_ga(
         config=config,
@@ -37,9 +34,9 @@ def objective(trial):
 
     return fitness
 
-sampler = optuna.samplers.GPSampler() #using bayesian optimisation
+sampler = optuna.samplers.TPESampler() #using bayesian optimisation
 
-# Optuna study
+#Optuna study
 study = optuna.create_study(
     direction="maximize", #maximise the fitness
     sampler=sampler

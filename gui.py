@@ -21,11 +21,10 @@ class GADisplay(QWidget):
 
         self.setStyleSheet("background-color: #f5f5f5; color: #1a1a1a;")
 
-        # Top bar: Iteration and Fitness on the same row
         top_bar = QHBoxLayout()
         top_bar.setContentsMargins(16, 12, 16, 0)
 
-        self.iteration_label = QLabel("Iteration: 0")
+        self.iteration_label = QLabel("Generation: 0")
         self.iteration_label.setStyleSheet(
             "font-size: 13px; font-weight: bold; color: #2563eb;"
         )
@@ -53,7 +52,6 @@ class GADisplay(QWidget):
         top_bar.addStretch()
         top_bar.addWidget(self.fitness_label)
 
-        # Main content row
         main_layout = QHBoxLayout()
         main_layout.setContentsMargins(16, 8, 16, 16)
         main_layout.setSpacing(16)
@@ -77,7 +75,6 @@ class GADisplay(QWidget):
         self._style_axes()
         main_layout.addWidget(self.canvas, 1)
 
-        # Outer wrapper
         wrapper = QVBoxLayout()
         wrapper.setSpacing(0)
         wrapper.addLayout(top_bar)
@@ -87,7 +84,7 @@ class GADisplay(QWidget):
 
     def _style_axes(self):
         """Apply consistent light-theme styling to the plot axes."""
-        self.ax.set_xlabel("Iteration", color="#1a1a1a")
+        self.ax.set_xlabel("Generation", color="#1a1a1a")
         self.ax.set_ylabel("Best Fitness", color="#1a1a1a")
         self.ax.set_title("Best Fitness Over Time", color="#1a1a1a", pad=10)
         self.ax.tick_params(colors="#6b7280")
@@ -97,7 +94,7 @@ class GADisplay(QWidget):
 
     def update_display(self, iteration, qis_text, state, fitness, avg_fitness, worst_fitness):
         """Update the display with new iteration, qis circuit, and fitness statistics."""
-        self.iteration_label.setText(f"Iteration: {iteration}")
+        self.iteration_label.setText(f"Generation: {iteration}")
         self.fitness_label.setText(f"Best Fitness: {fitness:.6f}")
         self.avg_fitness_label.setText(f"Avg Fitness: {avg_fitness:.6f}")
         self.worst_fitness_label.setText(f"Worst Fitness: {worst_fitness:.6f}")

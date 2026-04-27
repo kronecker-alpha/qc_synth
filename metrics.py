@@ -19,6 +19,7 @@ for file in dir_list:
     final_fidelity = metrics["ffidelity"]
     final_fitness = metrics["generations"][-1]["best_fitness"]
     time2 = metrics["time"]
+    gate_set = metrics["gate_set"]
 
     #circuit metrics
     qis = QuantumCircuit(int(file[0])) #create circuit

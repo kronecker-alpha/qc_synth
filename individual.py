@@ -55,8 +55,9 @@ class Individual:
                         if self.no_qu == 2: #swap target and control
                             self.chromosome[i][1], self.chromosome[i][2] = self.chromosome[i][2], self.chromosome[i][1]
                         else:
-                            valid_gates = [k for k in range(0,Individual.no_qu) if (k != self.chromosome[i][1] and k != self.chromosome[i][2])]
-                            self.chromosome[i][j] = rng.choice(valid_gates)
+                            valid_gates = [k for k in range(0,Individual.no_qu) if (k != self.chromosome[i][1] and k != self.chromosome[i][2] and k != self.chromosome[i][3])]
+                            if valid_gates:
+                                self.chromosome[i][j] = rng.choice(valid_gates)
                     elif j==3: #second control
                         if self.no_qu == 2: #or unneeded for this gate
                             pass
@@ -69,8 +70,12 @@ class Individual:
         #Structural Mutation
         if rng.random() < self.mut_rate: #add gate
             qubit_choice = [i for i in range(0,Individual.no_qu)]
-            [q1, q2, q3] = rng.choice(qubit_choice, 3, replace=False)
-            gene = [rng.choice(Individual.gates), q1, q2, q3 ,rng.random()*2*np.pi ]
+            try:
+                [q1, q2, q3] = rng.choice(qubit_choice, 3, replace=False)
+                gene = [rng.choice(Individual.gates), q1, q2, q3 ,rng.random()*2*np.pi ]
+            except:
+                [q1, q2] = rng.choice(qubit_choice, 2, replace=False)
+                gene = [rng.choice(Individual.gates), q1, q2, None ,rng.random()*2*np.pi ]
             idx = rng.integers(0, len(self.chromosome) + 1)
             self.chromosome.insert(idx, gene)
 

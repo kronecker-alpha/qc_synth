@@ -7,7 +7,7 @@ from parameters import pop_size, mutation_rate, selection_pressure, elitism, no_
 from ga_runner import run_ga
 
 #total evaluation budget
-TARGET_EVALS = 100000
+TARGET_EVALS = 1000
 
 def main():
     config = { #config dictionary

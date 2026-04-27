@@ -154,7 +154,7 @@ TARGET_OPTIONS: dict[str, tuple[int, object]] = {
     "w_3q":             (3, w_state(n_qubits=3)),
 
     "cluster_3q":       (3, cluster_state_1d(n_qubits=3)),
-    "haar_4q":          (4, haar_random_state(n_qubits=4, seed=1)),
+    "haar_4q":          (3, haar_random_state(n_qubits=3, seed=1)),
 
     "qft_3q":           (3, qft_unitary(n_qubits=3)),
     "grover_3q":        (3, grover_diffusion_unitary(n_qubits=3)),

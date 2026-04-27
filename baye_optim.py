@@ -4,7 +4,7 @@ Performs Bayesian Optimisation on the hyperparameters of the genetic program usi
 ############PARAMETERS
 
 TARGET_EVALS = 10000
-N_TRIALS = 5
+N_TRIALS = 50
 
 ############
 import optuna
@@ -19,7 +19,7 @@ def objective(trial):
         "pop_size": trial.suggest_int("pop_size", 50, 500),
         "mutation_rate": trial.suggest_float("mutation_rate", 0.001, 0.05),
         "selection_pressure": trial.suggest_int("selection_pressure", 2, 20),
-        "elitism": trial.suggest_float("elitism", 0.02, 0.2),
+        "elitism": trial.suggest_float("elitism", 0.01, 0.2),
     }
 
     iterations = int(TARGET_EVALS / config["pop_size"]) #ensure consistant computational useage

@@ -100,10 +100,11 @@ def run_ga(config, iterations, no_qu, gate_set, trial=None, display=None,target2
         for row in best.chromosome
     ]
     metrics["ffidelity"] = best.calc_fidelity()
+    metrics["gate_set"] = str(gate_set)
 
     print(best.chromosome)
 
-    with open(fr"results/{no_qu}_{gate_set}_{target}.json","w") as f:
+    with open(fr"results/{no_qu}_{gate_set}_{end}.json","w") as f:
         json.dump(metrics, f)
 
     return best_fitness #for optimisation

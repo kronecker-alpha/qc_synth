@@ -4,8 +4,7 @@ Performs grid search on the gate sets and target states defined in circuits.py w
 
 ############PARAMETERS
 
-TARGET_EVALS = 1000
-N_TRIALS = 5
+TARGET_EVALS = 10000
 
 #############
 from circuits import *
